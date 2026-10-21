@@ -1,0 +1,20 @@
+name: agent guardrails
+on:
+  pull_request:
+
+jobs:
+  guardrails:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: New tests name the failure they catch
+        run: node ci/check-new-tests.mjs origin/${{ github.base_ref }}
+      - name: Lint only gets stricter
+        env:
+          LINT_RATCHET_ACK: ${{ contains(github.event.pull_request.labels.*.name, 'lint-budget-rebaseline') && '1' || '0' }}
+        run: node ci/check-lint-ratchet.mjs origin/${{ github.base_ref }}
